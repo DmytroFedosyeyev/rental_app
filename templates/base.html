@@ -24,7 +24,12 @@
                     </li>
                 </ul>
                 {% if user.is_authenticated %}
-                    <span class="navbar-text ms-3">{{ user.username }} | <a href="{% url 'logout' %}" class="text-white">Выйти</a></span>
+                    <span class="navbar-text ms-3">{{ user.username }} |
+                        <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-link p-0 text-decoration-none">Выйти</button>
+                        </form>
+                    </span>
                 {% else %}
                     <a href="{% url 'login' %}" class="btn btn-outline-light me-2">Войти</a>
                     <a href="{% url 'expenses:registration_register' %}" class="btn btn-light">Зарегистрироваться</a>
