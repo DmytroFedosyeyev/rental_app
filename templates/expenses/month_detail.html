@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block title %}Детали месяца - {{ month|date:"F Y" }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="mb-3">{{ month|date:"F Y" }}</h1>
+        <p class="lead text-muted">Детали расходов и платежей</p>
+    </div>
+    <div class="col-auto">
+        <a href="#" class="btn btn-outline-primary">Экспорт PDF</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Расходы</h5>
+            </div>
+            <div class="card-body">
+                {% if expenses %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Категория</th>
+                                    <th>Сумма</th>
+                                    <th>Оплачено</th>
+                                    <th>Долг</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for expense in expenses %}
+                                    <tr>
+                                        <td>{{ expense.category.name }}</td>
+                                        <td>€{{ expense.amount }}</td>
+                                        <td>€{{ expense.paid_amount }}</td>
+                                        <td class="{% if expense.debt > 0 %}text-danger{% else %}text-success{% endif %}">
+                                            €{{ expense.debt }}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <p><strong>Общий долг:</strong> €{{ total_debt }}</p>
+                {% else %}
+                    <p class="text-muted">Нет расходов за этот месяц.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Счётчики</h5>
+            </div>
+            <div class="card-body">
+                {% if meter_readings %}
+                    <div class="row">
+                        {% for reading in meter_readings %}
+                            <div class="col-6 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title text-muted">{{ reading.get_type_display }}</h6>
+                                        <h4 class="text-primary">{{ reading.value }} {% if reading.type == 'electricity' %}kWh{% else %}м³{% endif %}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">Нет данных по счётчикам.</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0">Платежи</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Всего оплачено:</strong> €{{ total_payments }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

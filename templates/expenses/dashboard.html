@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block title %}Панель управления - Rental App{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="mb-3">Добро пожаловать, {{ user.username }}!</h1>
+        <p class="lead text-muted">Управляйте своими расходами на аренду</p>
+    </div>
+    <div class="col-auto">
+        <a href="#" class="btn btn-outline-primary">Экспорт PDF</a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Обзор за год</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    {% for month in months %}
+                        <div class="col-1 text-center">
+                            <a href="{% url 'expenses:month_detail' month.year month.month %}" class="text-decoration-none">
+                                <div class="p-2 rounded {% if month.status == 'green' %}bg-success{% elif month.status == 'red' %}bg-danger{% else %}bg-secondary{% endif %} text-white">
+                                    {{ month.name }}
+                                </div>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-auto">
+        <a href="{% url 'expenses:add_expense' %}" class="btn btn-primary">Добавить расход</a>
+        <a href="{% url 'expenses:add_meter_reading' %}" class="btn btn-primary">Добавить показания</a>
+        <a href="{% url 'expenses:add_payment' %}" class="btn btn-primary">Добавить платёж</a>
+        <a href="{% url 'expenses:graphs' %}" class="btn btn-primary">Графики</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-house-door text-primary mb-3" style="font-size: 3rem;"></i>
+                <h5 class="card-title">Текущий месяц</h5>
+                {% if total_expense %}
+                    <h3 class="text-primary">€{{ total_expense }}</h3>
+                {% else %}
+                    <h3 class="text-muted">Нет данных</h3>
+                {% endif %}
+                <p class="card-text text-muted">Общий расход</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-graph-up text-success mb-3" style="font-size: 3rem;"></i>
+                <h5 class="card-title">Графики</h5>
+                <a href="{% url 'expenses:graphs' %}" class="text-success"><h3>Просмотр</h3></a>
+                <p class="card-text text-muted">Анализ расходов по месяцам</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-credit-card text-warning mb-3" style="font-size: 3rem;"></i>
+                <h5 class="card-title">Платежи</h5>
+                <h3 class="text-warning">Оплатить</h3>
+                <p class="card-text text-muted">Внести платёж за месяц</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Месячные расходы</h5>
+            </div>
+            <div class="card-body">
+                {% if expenses %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Категория</th>
+                                    <th>Сумма</th>
+                                    <th>Оплачено</th>
+                                    <th>Долг</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for expense in expenses %}
+                                    <tr>
+                                        <td>{{ expense.category.name }}</td>
+                                        <td>€{{ expense.amount }}</td>
+                                        <td>€{{ expense.paid_amount }}</td>
+                                        <td class="{% if expense.debt > 0 %}text-danger{% else %}text-success{% endif %}">
+                                            €{{ expense.debt }}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'expenses:edit_expense' expense.pk %}" class="btn btn-sm btn-outline-primary">Редактировать</a>
+                                            <a href="{% url 'expenses:delete_expense' expense.pk %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Нет расходов за текущий месяц.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Счётчики</h5>
+            </div>
+            <div class="card-body">
+                {% if meter_readings %}
+                    <div class="row">
+                        {% for reading in meter_readings %}
+                            <div class="col-6 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title text-muted">{{ reading.get_type_display }}</h6>
+                                        <h4 class="text-primary">{{ reading.value }} {% if reading.type == 'electricity' %}kWh{% else %}м³{% endif %}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">Нет данных по счётчикам.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
