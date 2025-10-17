@@ -10,7 +10,7 @@
         <p class="lead text-muted">Детали расходов и платежей</p>
     </div>
     <div class="col-auto">
-        <a href="#" class="btn btn-outline-primary">Экспорт PDF</a>
+        <a href="{% url 'expenses:export_pdf' month.year month.month %}" class="btn btn-outline-primary">Экспорт PDF</a>
     </div>
 </div>
 

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Отчёт за {{ month|date:"F Y" }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Отчёт за {{ month|date:"F Y" }}</h1>
+    <h2>Расходы</h2>
+    <table>
+        <tr><th>Категория</th><th>Сумма</th><th>Оплачено</th><th>Долг</th></tr>
+        {% for expense in expenses %}
+            <tr>
+                <td>{{ expense.category.name }}</td>
+                <td>€{{ expense.amount }}</td>
+                <td>€{{ expense.paid_amount }}</td>
+                <td>€{{ expense.debt }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    <p><strong>Общий долг:</strong> €{{ total_debt }}</p>
+    <h2>Счётчики</h2>
+    <table>
+        <tr><th>Тип</th><th>Значение</th><th>Дата</th></tr>
+        {% for reading in meter_readings %}
+            <tr>
+                <td>{{ reading.get_type_display }}</td>
+                <td>{{ reading.value }} {% if reading.type == 'electricity' %}kWh{% else %}м³{% endif %}</td>
+                <td>{{ reading.date }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    <p><strong>Всего оплачено:</strong> €{{ total_payments }}</p>
+</body>
+</html>

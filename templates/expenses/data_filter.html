@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block title %}Выборка данных{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="mb-3">Выборка данных</h1>
+        <p class="lead text-muted">Выберите период для отображения расходов</p>
+    </div>
+    <div class="col-auto">
+        <a href="#" class="btn btn-outline-primary">Экспорт PDF</a>
+    </div>
+</div>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <form method="get">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="start_date" class="form-label">Начальная дата</label>
+                <input type="date" name="start_date" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label for="end_date" class="form-label">Конечная дата</label>
+                <input type="date" name="end_date" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Показать</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

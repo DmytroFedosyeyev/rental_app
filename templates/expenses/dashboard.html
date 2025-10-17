@@ -1,83 +1,52 @@
 {% extends 'base.html' %}
 {% load django_bootstrap5 %}
+{% load i18n %}
 
-{% block title %}Панель управления - Rental App{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block content %}
 <div class="row mb-4">
     <div class="col">
         <h1 class="mb-3">Добро пожаловать, {{ user.username }}!</h1>
-        <p class="lead text-muted">Управляйте своими расходами на аренду</p>
-    </div>
-    <div class="col-auto">
-        <a href="#" class="btn btn-outline-primary">Экспорт PDF</a>
+        <p class="lead text-muted">Управляйте своими расходами</p>
     </div>
 </div>
 
 <div class="row mb-4">
-    <div class="col-12">
-        <div class="card shadow-sm">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">Обзор за год</h5>
-            </div>
-            <div class="card-body">
-                <div class="row g-2">
-                    {% for month in months %}
-                        <div class="col-1 text-center">
-                            <a href="{% url 'expenses:month_detail' month.year month.month %}" class="text-decoration-none">
-                                <div class="p-2 rounded {% if month.status == 'green' %}bg-success{% elif month.status == 'red' %}bg-danger{% else %}bg-secondary{% endif %} text-white">
-                                    {{ month.name }}
-                                </div>
-                            </a>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
+    {% for month in months %}
+        <div class="col-2 mb-3">
+            <a href="{% url 'expenses:month_detail' month.year month.month %}" class="btn btn-block
+                {% if month.status == 'red' %}btn-danger
+                {% elif month.status == 'green' %}btn-success
+                {% else %}btn-secondary{% endif %}">
+                {{ month.name }}
+            </a>
         </div>
-    </div>
+    {% endfor %}
 </div>
 
-<div class="row mb-4">
-    <div class="col-auto">
-        <a href="{% url 'expenses:add_expense' %}" class="btn btn-primary">Добавить расход</a>
-        <a href="{% url 'expenses:add_meter_reading' %}" class="btn btn-primary">Добавить показания</a>
-        <a href="{% url 'expenses:add_payment' %}" class="btn btn-primary">Добавить платёж</a>
-        <a href="{% url 'expenses:graphs' %}" class="btn btn-primary">Графики</a>
-    </div>
-</div>
-
-<div class="row g-4">
+<div class="row">
     <div class="col-md-4">
         <div class="card h-100 shadow-sm">
             <div class="card-body text-center">
-                <i class="bi bi-house-door text-primary mb-3" style="font-size: 3rem;"></i>
-                <h5 class="card-title">Текущий месяц</h5>
-                {% if total_expense %}
-                    <h3 class="text-primary">€{{ total_expense }}</h3>
-                {% else %}
-                    <h3 class="text-muted">Нет данных</h3>
-                {% endif %}
-                <p class="card-text text-muted">Общий расход</p>
+                <h5 class="card-title">Добавить расход</h5>
+                <a href="{% url 'expenses:add_expense' %}" class="btn btn-primary">Добавить</a>
             </div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card h-100 shadow-sm">
             <div class="card-body text-center">
-                <i class="bi bi-graph-up text-success mb-3" style="font-size: 3rem;"></i>
-                <h5 class="card-title">Графики</h5>
-                <a href="{% url 'expenses:graphs' %}" class="text-success"><h3>Просмотр</h3></a>
-                <p class="card-text text-muted">Анализ расходов по месяцам</p>
+                <h5 class="card-title">Добавить показания</h5>
+                <a href="{% url 'expenses:add_meter_reading' %}" class="btn btn-primary">Добавить</a>
             </div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card h-100 shadow-sm">
             <div class="card-body text-center">
-                <i class="bi bi-credit-card text-warning mb-3" style="font-size: 3rem;"></i>
-                <h5 class="card-title">Платежи</h5>
-                <h3 class="text-warning">Оплатить</h3>
-                <p class="card-text text-muted">Внести платёж за месяц</p>
+                <h5 class="card-title">Добавить платёж</h5>
+                <a href="{% url 'expenses:add_payment' %}" class="btn btn-primary">Добавить</a>
             </div>
         </div>
     </div>

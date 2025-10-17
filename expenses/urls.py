@@ -13,4 +13,6 @@ urlpatterns = [
     path('add-payment/', views.AddPaymentView.as_view(), name='add_payment'),
     path('graphs/', views.GraphsView.as_view(), name='graphs'),
     path('month/<int:year>/<int:month>/', views.MonthDetailView.as_view(), name='month_detail'),
+    path('data-filter/', views.DataFilterView.as_view(), name='data_filter'),
+    path('export-pdf/<int:year>/<int:month>/', views.PDFExportView.as_view(), name='export_pdf'),
 ]
