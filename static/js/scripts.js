@@ -1,0 +1,1 @@
+// scripts.js - Custom JavaScript for Rental App
