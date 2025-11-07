@@ -12,14 +12,18 @@
     </div>
 </div>
 
-<div class="row mb-4">
+<!-- 12 МЕСЯЦЕВ В ОДНОЙ СТРОКЕ -->
+<div class="d-flex flex-nowrap overflow-auto gap-2 mb-4 px-1" style="scrollbar-width: thin;">
     {% for month in months %}
-        <div class="col-2 mb-3">
-            <a href="{% url 'expenses:month_detail' month.year month.month %}" class="btn btn-block
-                {% if month.status == 'red' %}btn-danger
-                {% elif month.status == 'green' %}btn-success
-                {% else %}btn-secondary{% endif %}">
-                {{ month.name }}
+        <div class="flex-shrink-0" style="width: 80px;">
+            <a href="{% url 'expenses:month_detail' month.year month.month %}"
+               class="btn btn-block w-100 h-100 d-flex flex-column justify-content-center align-items-center
+                   {% if month.status == 'red' %}btn-danger
+                   {% elif month.status == 'green' %}btn-success
+                   {% else %}btn-secondary{% endif %}"
+               style="height: 70px; font-size: 0.9rem; text-decoration: none;">
+                <span>{{ month.name }}</span>
+                <small style="font-size: 0.7rem;">{{ month.year }}</small>
             </a>
         </div>
     {% endfor %}

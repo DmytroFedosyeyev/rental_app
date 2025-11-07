@@ -19,21 +19,39 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         today = datetime.today()
+        current_year = today.year
+
         months = []
-        for i in range(-6, 6):
-            month_date = today + relativedelta(months=i)
-            expenses = Expense.objects.filter(user=self.request.user, date__year=month_date.year, date__month=month_date.month)
+        # 12 месяцев: с января по декабрь
+        for i in range(12):
+            month_date = datetime(current_year, 1, 1) + relativedelta(months=i)
+            expenses = Expense.objects.filter(
+                user=self.request.user,
+                date__year=month_date.year,
+                date__month=month_date.month
+            )
             total_debt = sum(expense.debt() for expense in expenses)
-            status = 'future' if month_date > today else 'green' if total_debt <= 0 else 'red'
+
+            status = 'future' if month_date > today else ('green' if total_debt <= 0 else 'red')
+
             months.append({
                 'year': month_date.year,
                 'month': month_date.month,
                 'name': month_date.strftime('%b'),
                 'status': status
             })
+
         context['months'] = months
-        context['expenses'] = Expense.objects.filter(user=self.request.user, date__year=today.year, date__month=today.month)
-        context['meter_readings'] = MeterReading.objects.filter(user=self.request.user, date__year=today.year, date__month=today.month)
+        context['expenses'] = Expense.objects.filter(
+            user=self.request.user,
+            date__year=today.year,
+            date__month=today.month
+        )
+        context['meter_readings'] = MeterReading.objects.filter(
+            user=self.request.user,
+            date__year=today.year,
+            date__month=today.month
+        )
         return context
 
 class RegisterView(CreateView):
