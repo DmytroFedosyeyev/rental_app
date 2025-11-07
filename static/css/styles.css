@@ -190,3 +190,46 @@ body {
         font-size: 0.9rem;
     }
 }
+
+/* === КНОПКИ В ТАБЛИЦЕ: ФИКС ОТСТУПА ДЛЯ BOOTSTRAP 5 === */
+.btn-group .btn {
+    border-radius: 6px !important;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+    transition: all 0.2s ease;
+    margin: 0 !important;
+}
+
+.btn-group .btn + .btn {
+    margin-left: 6px !important; /* ← ОТСТУП 6px — ВИДНО! */
+}
+
+.btn-group .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-group .btn-outline-primary {
+    color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-group .btn-outline-primary:hover {
+    background: #007bff;
+    color: white;
+}
+
+.btn-group .btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-group .btn-outline-danger:hover {
+    background: #dc3545;
+    color: white;
+}
+
+/* Отключаем перенос текста в ячейке */
+.text-nowrap {
+    white-space: nowrap;
+}

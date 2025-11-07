@@ -4,12 +4,20 @@ from django.contrib.auth.models import User
 from .models import Apartment, ExpenseCategory
 
 @receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
+def create_user_apartment_and_categories(sender, instance, created, **kwargs):
     if created:
-        # Создаём Apartment для пользователя
-        Apartment.objects.create(user=instance)
+        # Создаём квартиру
+        Apartment.objects.get_or_create(user=instance)
 
-        # Создаём категории расходов с приоритетами
-        ExpenseCategory.objects.create(user=instance, name="Аренда", priority=1)
-        ExpenseCategory.objects.create(user=instance, name="Коммуналка", priority=2)
-        ExpenseCategory.objects.create(user=instance, name="Электричество", priority=3)
+        # Создаём категории — только если их ещё нет
+        categories = [
+            ('Аренда', 1),
+            ('Коммуналка', 2),
+            ('Электричество', 3),
+        ]
+        for name, priority in categories:
+            ExpenseCategory.objects.get_or_create(
+                user=instance,
+                name=name,
+                defaults={'priority': priority}
+            )

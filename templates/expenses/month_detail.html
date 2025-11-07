@@ -15,6 +15,7 @@
 </div>
 
 <div class="row">
+    <!-- === РАСХОДЫ === -->
     <div class="col-md-6">
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">
@@ -30,6 +31,7 @@
                                     <th>Сумма</th>
                                     <th>Оплачено</th>
                                     <th>Долг</th>
+                                    <th>Действия</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -40,6 +42,21 @@
                                         <td>€{{ expense.paid_amount }}</td>
                                         <td class="{% if expense.debt > 0 %}text-danger{% else %}text-success{% endif %}">
                                             €{{ expense.debt }}
+                                        </td>
+                                        <td class="text-nowrap">
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'expenses:edit_expense' expense.pk %}"
+                                                   class="btn btn-sm btn-outline-primary"
+                                                   title="Редактировать">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a href="{% url 'expenses:delete_expense' expense.pk %}"
+                                                   class="btn btn-sm btn-outline-danger"
+                                                   title="Удалить"
+                                                   onclick="return confirm('Удалить расход? Это нельзя отменить.');">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -53,7 +70,10 @@
             </div>
         </div>
     </div>
+
+    <!-- === СЧЁТЧИКИ И ПЛАТЕЖИ === -->
     <div class="col-md-6">
+        <!-- Счётчики -->
         <div class="card shadow-sm">
             <div class="card-header bg-success text-white">
                 <h5 class="mb-0">Счётчики</h5>
@@ -66,7 +86,10 @@
                                 <div class="card bg-light">
                                     <div class="card-body text-center">
                                         <h6 class="card-title text-muted">{{ reading.get_type_display }}</h6>
-                                        <h4 class="text-primary">{{ reading.value }} {% if reading.type == 'electricity' %}kWh{% else %}м³{% endif %}</h4>
+                                        <h4 class="text-primary">
+                                            {{ reading.value }}
+                                            {% if reading.type == 'electricity' %}kWh{% else %}м³{% endif %}
+                                        </h4>
                                     </div>
                                 </div>
                             </div>
@@ -77,6 +100,8 @@
                 {% endif %}
             </div>
         </div>
+
+        <!-- Платежи -->
         <div class="card shadow-sm mt-4">
             <div class="card-header bg-warning text-white">
                 <h5 class="mb-0">Платежи</h5>

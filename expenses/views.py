@@ -21,8 +21,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         today = datetime.today()
         current_year = today.year
 
+        # === 12 месяцев с января ===
         months = []
-        # 12 месяцев: с января по декабрь
         for i in range(12):
             month_date = datetime(current_year, 1, 1) + relativedelta(months=i)
             expenses = Expense.objects.filter(
@@ -30,28 +30,33 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 date__year=month_date.year,
                 date__month=month_date.month
             )
-            total_debt = sum(expense.debt() for expense in expenses)
-
+            total_debt = sum(e.debt() for e in expenses)
             status = 'future' if month_date > today else ('green' if total_debt <= 0 else 'red')
-
             months.append({
                 'year': month_date.year,
                 'month': month_date.month,
                 'name': month_date.strftime('%b'),
                 'status': status
             })
-
         context['months'] = months
-        context['expenses'] = Expense.objects.filter(
+
+        # === Сводка за ГОД ===
+        year_expenses = Expense.objects.filter(
             user=self.request.user,
-            date__year=today.year,
-            date__month=today.month
+            date__year=current_year
         )
-        context['meter_readings'] = MeterReading.objects.filter(
-            user=self.request.user,
-            date__year=today.year,
-            date__month=today.month
-        )
+        total_amount = sum(e.amount for e in year_expenses)
+        total_paid = sum(e.paid_amount for e in year_expenses)
+        total_debt = total_amount - total_paid
+        credit = Credit.objects.filter(user=self.request.user).aggregate(Sum('amount'))['amount__sum'] or 0
+
+        context['year_summary'] = {
+            'total_amount': total_amount,
+            'total_paid': total_paid,
+            'total_debt': total_debt,
+            'credit': credit
+        }
+
         return context
 
 class RegisterView(CreateView):
@@ -64,6 +69,11 @@ class AddExpenseView(LoginRequiredMixin, CreateView):
     form_class = ExpenseForm
     template_name = 'expenses/add_expense.html'
     success_url = reverse_lazy('expenses:dashboard')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def form_valid(self, form):
         form.instance.user = self.request.user

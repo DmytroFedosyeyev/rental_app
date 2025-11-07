@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block title %}Удалить расход{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Подтвердите удаление</h5>
+            </div>
+            <div class="card-body">
+                <p>Вы уверены, что хотите удалить расход:</p>
+                <ul>
+                    <li><strong>Категория:</strong> {{ object.category.name }}</li>
+                    <li><strong>Сумма:</strong> €{{ object.amount }}</li>
+                    <li><strong>Дата:</strong> {{ object.date|date:"d.m.Y" }}</li>
+                </ul>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Да, удалить</button>
+                    <a href="{% url 'expenses:dashboard' %}" class="btn btn-secondary">Отмена</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,6 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator, MinValueValidator
 from .models import Expense, ExpenseCategory, MeterReading, Payment
+from django.core.exceptions import ValidationError
 
 class RegisterForm(UserCreationForm):
     username = forms.CharField(
@@ -26,6 +27,34 @@ class ExpenseForm(forms.ModelForm):
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if self.user:
+            self.fields['category'].queryset = ExpenseCategory.objects.filter(user=self.user)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        category = cleaned_data.get('category')
+        date = cleaned_data.get('date')
+
+        if category and date and self.user:
+            # Проверяем: есть ли уже расход в этой категории за этот месяц
+            existing = Expense.objects.filter(
+                user=self.user,
+                category=category,
+                date__year=date.year,
+                date__month=date.month
+            )
+            if self.instance:
+                existing = existing.exclude(pk=self.instance.pk)  # Исключаем текущий при редактировании
+            if existing.exists():
+                raise ValidationError(
+                    f"Расход в категории «{category.name}» за {date.strftime('%B %Y')} уже существует. "
+                    "Используйте редактирование или удаление."
+                )
+        return cleaned_data
 
 class MeterReadingForm(forms.ModelForm):
     class Meta:
