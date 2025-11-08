@@ -67,15 +67,15 @@ class MeterReadingForm(forms.ModelForm):
 class PaymentForm(forms.ModelForm):
     class Meta:
         model = Payment
-        fields = ['category', 'amount', 'date']
+        fields = ['amount', 'date', 'description']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
-            'category': forms.Select(attrs={'class': 'form-select'}),
+            'description': forms.Textarea(attrs={'rows': 2}),
         }
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        if user:
-            self.fields['category'].queryset = ExpenseCategory.objects.filter(user=user)
-            self.fields['category'].required = False  # Позволяет общий платёж
+        self.fields['amount'].widget.attrs.update({'class': 'form-control', 'placeholder': '0.00'})
+        self.fields['date'].widget.attrs.update({'class': 'form-control'})
+        self.fields['description'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Необязательно'})

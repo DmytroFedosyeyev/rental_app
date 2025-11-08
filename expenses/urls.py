@@ -15,4 +15,5 @@ urlpatterns = [
     path('month/<int:year>/<int:month>/', views.MonthDetailView.as_view(), name='month_detail'),
     path('data-filter/', views.DataFilterView.as_view(), name='data_filter'),
     path('export-pdf/<int:year>/<int:month>/', views.PDFExportView.as_view(), name='export_pdf'),
+    path('month/<int:year>/<int:month>/pay-all/', views.PayAllView.as_view(), name='pay_all'),
 ]
