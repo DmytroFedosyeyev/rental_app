@@ -180,7 +180,9 @@ class GraphsView(LoginRequiredMixin, TemplateView):
         ).order_by('date')
 
         labels = []
-        cold_water = hot_water = electricity = []
+        cold_water = []
+        hot_water = []
+        electricity = []
 
         for i in range(12):
             month_date = start_date + relativedelta(months=i)
@@ -201,23 +203,32 @@ class GraphsView(LoginRequiredMixin, TemplateView):
                     date__lt=month_date
                 ).order_by('-date').first()
 
-                value = (current.value - previous.value) if current and previous else None
+                if current and previous:
+                    value = float(current.value - previous.value)
+                else:
+                    value = None
                 container.append(value)
+
+        # Вот тут главное исправление — float() для Decimal!
+        def to_float_list(lst):
+            return [float(x) if x is not None else None for x in lst]
 
         context['chart_data'] = {
             'labels': json.dumps(labels),
-            'cold_water': json.dumps(cold_water),
-            'hot_water': json.dumps(hot_water),
-            'electricity': json.dumps(electricity)
+            'cold_water': json.dumps(to_float_list(cold_water)),
+            'hot_water': json.dumps(to_float_list(hot_water)),
+            'electricity': json.dumps(to_float_list(electricity))
         }
 
-        # Статистика
+        # Статистика (тоже через float)
         def stats(data):
             values = [x for x in data if x is not None]
+            if not values:
+                return {'min': 0, 'max': 0, 'avg': 0}
             return {
-                'min': min(values) if values else 0,
-                'max': max(values) if values else 0,
-                'avg': sum(values) / len(values) if values else 0
+                'min': min(values),
+                'max': max(values),
+                'avg': sum(values) / len(values)
             }
 
         context['cold_stats'] = stats(cold_water)

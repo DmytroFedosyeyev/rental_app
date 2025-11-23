@@ -55,6 +55,18 @@
             </div>
         </div>
     </div>
+
+    <!-- НОВАЯ КНОПКА — ГРАФИКИ -->
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body text-center d-flex flex-column justify-content-center">
+                <h5 class="card-title text-info mb-3">{% trans "Графики потребления" %}</h5>
+                <a href="{% url 'expenses:graphs' %}" class="btn btn-info text-white">
+                    <i class="bi bi-graph-up"></i> Перейти
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- СВОДКА ЗА ГОД -->
