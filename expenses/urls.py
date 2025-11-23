@@ -16,4 +16,6 @@ urlpatterns = [
     path('data-filter/', views.DataFilterView.as_view(), name='data_filter'),
     path('export-pdf/<int:year>/<int:month>/', views.PDFExportView.as_view(), name='export_pdf'),
     path('month/<int:year>/<int:month>/pay-all/', views.PayAllView.as_view(), name='pay_all'),
+    path('edit-meter-reading/<int:pk>/', views.UpdateMeterReadingView.as_view(), name='edit_meter_reading'),
+    path('delete-meter-reading/<int:pk>/', views.DeleteMeterReadingView.as_view(), name='delete_meter_reading'),
 ]

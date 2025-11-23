@@ -330,3 +330,27 @@ class PayAllView(LoginRequiredMixin, View):
 
         messages.success(request, _("Оплачено €{amount:.2f} одной суммой!").format(amount=total_debt))
         return redirect('expenses:month_detail', year=year, month=month)
+
+
+class UpdateMeterReadingView(LoginRequiredMixin, UpdateView):
+    model = MeterReading
+    form_class = MeterReadingForm
+    template_name = 'expenses/add_meter_reading.html'
+    success_url = reverse_lazy('expenses:dashboard')
+
+    def get_queryset(self):
+        return super().get_queryset().filter(user=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_edit'] = True
+        return context
+
+
+class DeleteMeterReadingView(LoginRequiredMixin, DeleteView):
+    model = MeterReading
+    template_name = 'expenses/delete_meter_reading.html'
+    success_url = reverse_lazy('expenses:dashboard')
+
+    def get_queryset(self):
+        return super().get_queryset().filter(user=self.request.user)

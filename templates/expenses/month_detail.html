@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load django_bootstrap5 %}
+{% load i18n %}
 
 {% block title %}Детали месяца - {{ month|date:"F Y" }}{% endblock %}
 
@@ -92,29 +93,56 @@
     <!-- === СЧЁТЧИКИ И ПЛАТЕЖИ === -->
     <div class="col-md-6">
         <!-- Счётчики -->
-        <div class="card shadow-sm">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0">Счётчики</h5>
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{% trans "Показания счётчиков" %}</h5>
+                <a href="{% url 'expenses:add_meter_reading' %}" class="btn btn-light btn-sm">
+                    {% trans "Добавить" %}
+                </a>
             </div>
             <div class="card-body">
                 {% if meter_readings %}
-                    <div class="row">
-                        {% for reading in meter_readings %}
-                            <div class="col-6 mb-3">
-                                <div class="card bg-light border-0">
-                                    <div class="card-body text-center">
-                                        <h6 class="card-title text-muted mb-1">{{ reading.get_type_display }}</h6>
-                                        <h4 class="text-primary fw-bold">
-                                            {{ reading.value|floatformat:1 }}
-                                            {% if reading.type == 'electricity' %}kWh{% else %}м³{% endif %}
-                                        </h4>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Тип" %}</th>
+                                    <th>{% trans "Значение" %}</th>
+                                    <th>{% trans "Ед." %}</th>
+                                    <th>{% trans "Дата" %}</th>
+                                    <th>{% trans "Действия" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reading in meter_readings %}
+                                <tr>
+                                    <td><strong>{{ reading.get_type_display }}</strong></td>
+                                    <td>{{ reading.value|floatformat:2 }}</td>
+                                    <td>{{ reading.get_unit }}</td>
+                                    <td>{{ reading.date|date:"d.m.Y" }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'expenses:edit_meter_reading' reading.pk %}"
+                                               class="btn btn-sm btn-outline-primary" title="{% trans 'Редактировать' %}">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="{% url 'expenses:delete_meter_reading' reading.pk %}"
+                                               class="btn btn-sm btn-outline-danger" title="{% trans 'Удалить' %}"
+                                               onclick="return confirm('Удалить показание за {{ reading.date|date:"d.m.Y" }}?');">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 {% else %}
-                    <p class="text-muted">Нет данных по счётчикам.</p>
+                    <p class="text-muted text-center">
+                        {% trans "Нет показаний за этот месяц." %}
+                        <a href="{% url 'expenses:add_meter_reading' %}">{% trans "Добавить сейчас" %}</a>
+                    </p>
                 {% endif %}
             </div>
         </div>

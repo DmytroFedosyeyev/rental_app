@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+{% load i18n %}
+
+{% block title %}{% trans "Удалить показание счётчика" %}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">{% trans "Подтверждение удаления" %}</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">{% trans "Вы уверены, что хотите удалить это показание?" %}</p>
+                    <div class="alert alert-info">
+                        <strong>{{ object.get_type_display }}</strong><br>
+                        {{ object.value|floatformat:1 }} {{ object.get_unit }}<br>
+                        <small class="text-muted">{{ object.date|date:"d E Y" }}</small>
+                    </div>
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            {% trans "Да, удалить" %}
+                        </button>
+                    </form>
+                    <a href="javascript:history.back()" class="btn btn-secondary ms-2">
+                        {% trans "Отмена" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
