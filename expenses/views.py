@@ -185,10 +185,14 @@ class GraphsView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         today = datetime.today()
-        start_date = today - relativedelta(years=1)
+        current_month = today.replace(day=1)  # 1 декабря 2025
+
+        # Последние 12 месяцев + текущий = 13 меток
+        start_date = current_month - relativedelta(months=12)
+
         readings = MeterReading.objects.filter(
             user=self.request.user,
-            date__gte=start_date
+            date__gte=start_date - relativedelta(months=1)  # +1 для предыдущего
         ).order_by('date')
 
         labels = []
@@ -196,9 +200,18 @@ class GraphsView(LoginRequiredMixin, TemplateView):
         hot_water = []
         electricity = []
 
-        for i in range(12):
+        last_values = {
+            'cold_water': None,
+            'hot_water': None,
+            'electricity': None
+        }
+
+        # Строим 13 месяцев: от 12 месяцев назад до текущего включительно
+        for i in range(13):
             month_date = start_date + relativedelta(months=i)
             labels.append(month_date.strftime('%b %Y'))
+
+            month_end = month_date + relativedelta(months=1, days=-1)
 
             for r_type, container in [
                 ('cold_water', cold_water),
@@ -207,21 +220,25 @@ class GraphsView(LoginRequiredMixin, TemplateView):
             ]:
                 current = readings.filter(
                     type=r_type,
-                    date__year=month_date.year,
-                    date__month=month_date.month
-                ).order_by('-date').first()
-                previous = readings.filter(
-                    type=r_type,
-                    date__lt=month_date
+                    date__gte=month_date,
+                    date__lte=month_end
                 ).order_by('-date').first()
 
-                if current and previous:
-                    value = float(current.value - previous.value)
+                if current:
+                    current_value = float(current.value)
+                    previous_value = last_values[r_type]
+                    last_values[r_type] = current_value
+                else:
+                    current_value = last_values[r_type]
+                    previous_value = last_values[r_type]
+
+                if previous_value is not None and current_value is not None:
+                    value = current_value - previous_value
                 else:
                     value = None
+
                 container.append(value)
 
-        # Вот тут главное исправление — float() для Decimal!
         def to_float_list(lst):
             return [float(x) if x is not None else None for x in lst]
 
@@ -231,6 +248,22 @@ class GraphsView(LoginRequiredMixin, TemplateView):
             'hot_water': json.dumps(to_float_list(hot_water)),
             'electricity': json.dumps(to_float_list(electricity))
         }
+
+        def stats(data):
+            values = [x for x in data if x is not None and x > 0]
+            if not values:
+                return {'min': 0, 'max': 0, 'avg': 0}
+            return {
+                'min': min(values),
+                'max': max(values),
+                'avg': sum(values) / len(values)
+            }
+
+        context['cold_stats'] = stats(cold_water)
+        context['hot_stats'] = stats(hot_water)
+        context['electricity_stats'] = stats(electricity)
+
+        return context
 
         # Статистика (тоже через float)
         def stats(data):

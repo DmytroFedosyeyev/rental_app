@@ -26,8 +26,9 @@ class ExpenseAdmin(admin.ModelAdmin):
     readonly_fields = ['debt']
 
     def debt(self, obj):
-        return obj.debt()
+        return obj.debt  # ← ПРАВИЛЬНО (без скобок!)
     debt.short_description = 'Долг'
+    debt.admin_order_field = 'amount'  # для сортировки (опционально)
 
 
 @admin.register(MeterReading)
