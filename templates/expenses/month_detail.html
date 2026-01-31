@@ -46,12 +46,12 @@
                                         </td>
                                         <td class="text-nowrap">
                                             <div class="btn-group" role="group">
-                                                <a href="{% url 'expenses:edit_expense' expense.pk %}"
+                                                <a href="{% url 'expenses:edit_expense' expense.pk %}?year={{ month.year }}"
                                                    class="btn btn-sm btn-outline-primary"
                                                    title="Редактировать">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
-                                                <a href="{% url 'expenses:delete_expense' expense.pk %}"
+                                                <a href="{% url 'expenses:delete_expense' expense.pk %}?year={{ month.year }}"
                                                    class="btn btn-sm btn-outline-danger"
                                                    title="Удалить"
                                                    onclick="return confirm('Удалить расход? Это нельзя отменить.');">
@@ -96,7 +96,7 @@
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">{% trans "Показания счётчиков" %}</h5>
-                <a href="{% url 'expenses:add_meter_reading' %}" class="btn btn-light btn-sm">
+                <a href="{% url 'expenses:add_meter_reading' %}?year={{ month.year }}" class="btn btn-light btn-sm">
                     {% trans "Добавить" %}
                 </a>
             </div>
@@ -122,11 +122,11 @@
                                     <td>{{ reading.date|date:"d.m.Y" }}</td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <a href="{% url 'expenses:edit_meter_reading' reading.pk %}"
+                                            <a href="{% url 'expenses:edit_meter_reading' reading.pk %}?year={{ month.year }}"
                                                class="btn btn-sm btn-outline-primary" title="{% trans 'Редактировать' %}">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <a href="{% url 'expenses:delete_meter_reading' reading.pk %}"
+                                            <a href="{% url 'expenses:delete_meter_reading' reading.pk %}?year={{ month.year }}"
                                                class="btn btn-sm btn-outline-danger" title="{% trans 'Удалить' %}"
                                                onclick="return confirm('Удалить показание за {{ reading.date|date:"d.m.Y" }}?');">
                                                 <i class="bi bi-trash"></i>
@@ -141,7 +141,7 @@
                 {% else %}
                     <p class="text-muted text-center">
                         {% trans "Нет показаний за этот месяц." %}
-                        <a href="{% url 'expenses:add_meter_reading' %}">{% trans "Добавить сейчас" %}</a>
+                        <a href="{% url 'expenses:add_meter_reading' %}?year={{ month.year }}">{% trans "Добавить сейчас" %}</a>
                     </p>
                 {% endif %}
             </div>

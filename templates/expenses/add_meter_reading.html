@@ -24,6 +24,7 @@
                 </h2>
                 <form method="post">
                     {% csrf_token %}
+                    <input type="hidden" name="year" value="{{ request.GET.year }}">
                     {% bootstrap_form_errors form %}
                     {% bootstrap_form form %}
                     <div class="d-grid gap-2">

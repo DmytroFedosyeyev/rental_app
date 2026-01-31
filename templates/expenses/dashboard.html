@@ -12,6 +12,15 @@
     </div>
 </div>
 
+<div class="text-center mb-4">
+    <label for="year-select" class="me-2 fw-bold">Год:</label>
+    <select id="year-select" class="form-select d-inline-block w-auto" onchange="window.location.href='?year=' + this.value">
+        {% for y in years %}
+            <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+    </select>
+</div>
+
 <!-- 12 МЕСЯЦЕВ В ОДНОЙ СТРОКЕ -->
 <div class="d-flex flex-nowrap overflow-auto gap-3 mb-5 px-1" style="scrollbar-width: thin;">
     {% for month in months %}
@@ -35,7 +44,7 @@
         <div class="card h-100 shadow-sm border-0">
             <div class="card-body text-center d-flex flex-column justify-content-center">
                 <h5 class="card-title text-primary mb-3">Добавить расход</h5>
-                <a href="{% url 'expenses:add_expense' %}" class="btn btn-primary">Добавить</a>
+                <a href="{% url 'expenses:add_expense' %}?year={{ selected_year }}" class="btn btn-primary">Добавить</a>
             </div>
         </div>
     </div>
@@ -43,7 +52,7 @@
         <div class="card h-100 shadow-sm border-0">
             <div class="card-body text-center d-flex flex-column justify-content-center">
                 <h5 class="card-title text-success mb-3">Добавить показания</h5>
-                <a href="{% url 'expenses:add_meter_reading' %}" class="btn btn-success">Добавить</a>
+                <a href="{% url 'expenses:add_meter_reading' %}?year={{ selected_year }}" class="btn btn-success">Добавить</a>
             </div>
         </div>
     </div>
@@ -51,17 +60,17 @@
         <div class="card h-100 shadow-sm border-0">
             <div class="card-body text-center d-flex flex-column justify-content-center">
                 <h5 class="card-title text-warning mb-3">Добавить платёж</h5>
-                <a href="{% url 'expenses:add_payment' %}" class="btn btn-warning text-dark">Добавить</a>
+                <a href="{% url 'expenses:add_payment' %}?year={{ selected_year }}" class="btn btn-warning text-dark">Добавить</a>
             </div>
         </div>
     </div>
 
-    <!-- НОВАЯ КНОПКА — ГРАФИКИ -->
+    <!-- Графики (тоже добавляем year) -->
     <div class="col-md-4">
         <div class="card h-100 shadow-sm border-0">
             <div class="card-body text-center d-flex flex-column justify-content-center">
                 <h5 class="card-title text-info mb-3">{% trans "Графики потребления" %}</h5>
-                <a href="{% url 'expenses:graphs' %}" class="btn btn-info text-white">
+                <a href="{% url 'expenses:graphs' %}?year={{ selected_year }}" class="btn btn-info text-white">
                     <i class="bi bi-graph-up"></i> Перейти
                 </a>
             </div>

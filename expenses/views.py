@@ -16,6 +16,7 @@ from .models import (
     Expense, MeterReading, Payment, Credit, ExpenseCategory, PaymentAllocation
 )
 from .forms import ExpenseForm, MeterReadingForm, PaymentForm, RegisterForm
+from django.db.models import Sum, F, Min
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):
@@ -24,32 +25,49 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         today = datetime.today()
-        current_year = today.year
 
-        # === 12 месяцев ===
+        # Выбранный год из GET (по умолчанию текущий)
+        selected_year_str = self.request.GET.get('year')
+        try:
+            selected_year = int(selected_year_str) if selected_year_str else today.year
+        except (ValueError, TypeError):
+            selected_year = today.year
+
+        # Диапазон лет
+        agg = Expense.objects.filter(user=self.request.user).aggregate(
+            min_year=Min('date__year')
+        )
+        min_year = agg['min_year'] or today.year
+        max_year = today.year + 1
+        years = list(range(min_year, max_year + 1))
+
+        context['selected_year'] = selected_year
+        context['years'] = years
+
+        # Месяцы для выбранного года
         months = []
         for i in range(12):
-            month_date = datetime(current_year, 1, 1) + relativedelta(months=i)
+            month_date = datetime(selected_year, 1, 1) + relativedelta(months=i)
             expenses = list(Expense.objects.filter(
                 user=self.request.user,
-                date__year=month_date.year,
+                date__year=selected_year,
                 date__month=month_date.month
             ))
             total_debt = sum(e.debt for e in expenses)
             status = 'future' if month_date > today else ('green' if total_debt <= 0 else 'red')
 
             months.append({
-                'year': month_date.year,
+                'year': selected_year,
                 'month': month_date.month,
                 'name': month_date.strftime('%b'),
                 'status': status
             })
         context['months'] = months
 
-        # === Сводка за год ===
+        # Сводка за выбранный год
         year_expenses = list(Expense.objects.filter(
             user=self.request.user,
-            date__year=current_year
+            date__year=selected_year
         ))
         total_amount = sum(e.amount for e in year_expenses)
         total_paid = sum(e.paid_amount for e in year_expenses)
@@ -89,6 +107,14 @@ class AddExpenseView(LoginRequiredMixin, CreateView):
         form.instance.user = self.request.user
         return super().form_valid(form)
 
+    def get_success_url(self):
+        # Берём year сначала из POST (из скрытого поля формы), если нет — из GET
+        year = self.request.POST.get('year') or self.request.GET.get('year')
+        url = reverse_lazy('expenses:dashboard')
+        if year:
+            url += f'?year={year}'
+        return url
+
 
 class UpdateExpenseView(LoginRequiredMixin, UpdateView):
     model = Expense
@@ -96,11 +122,30 @@ class UpdateExpenseView(LoginRequiredMixin, UpdateView):
     template_name = 'expenses/add_expense.html'
     success_url = reverse_lazy('expenses:dashboard')
 
+    # Добавляем этот метод
+    def get_success_url(self):
+        year = self.request.POST.get('year') or self.request.GET.get('year')
+        url = reverse_lazy('expenses:dashboard')
+        if year:
+            url += f'?year={year}'
+        return url
+
 
 class DeleteExpenseView(LoginRequiredMixin, DeleteView):
     model = Expense
     template_name = 'expenses/delete_expense.html'
-    success_url = reverse_lazy('expenses:dashboard')
+
+    def get_success_url(self):
+        year = self.request.POST.get('year') or self.request.GET.get('year')  # ← добавь POST
+        url = reverse_lazy('expenses:dashboard')
+        if year:
+            url += f'?year={year}'
+        return url
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['year'] = self.request.GET.get('year')
+        return context
 
 
 class AddMeterReadingView(LoginRequiredMixin, CreateView):
@@ -112,6 +157,14 @@ class AddMeterReadingView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.user = self.request.user
         return super().form_valid(form)
+
+    # Добавляем этот метод
+    def get_success_url(self):
+        year = self.request.POST.get('year') or self.request.GET.get('year')
+        url = reverse_lazy('expenses:dashboard')
+        if year:
+            url += f'?year={year}'
+        return url
 
 
 class AddPaymentView(LoginRequiredMixin, CreateView):
@@ -178,6 +231,14 @@ class AddPaymentView(LoginRequiredMixin, CreateView):
         messages.success(self.request, _("Платёж успешно добавлен и распределён."))
         return redirect(self.success_url)
 
+    # Добавляем этот метод
+    def get_success_url(self):
+        year = self.request.POST.get('year') or self.request.GET.get('year')
+        url = reverse_lazy('expenses:dashboard')
+        if year:
+            url += f'?year={year}'
+        return url
+
 
 class GraphsView(LoginRequiredMixin, TemplateView):
     template_name = 'expenses/graphs.html'
@@ -185,100 +246,62 @@ class GraphsView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         today = datetime.today()
-        current_month = today.replace(day=1)  # 1 декабря 2025
 
-        # Последние 12 месяцев + текущий = 13 меток
-        start_date = current_month - relativedelta(months=12)
+        # Выбранный год из GET-параметра (по умолчанию текущий)
+        selected_year_str = self.request.GET.get('year')
+        try:
+            selected_year = int(selected_year_str) if selected_year_str else today.year
+        except (ValueError, TypeError):
+            selected_year = today.year
 
-        readings = MeterReading.objects.filter(
+        # Диапазон лет: от самого старого расхода до текущего +1
+        min_year = Expense.objects.filter(user=self.request.user).aggregate(
+            min_year=Min('date__year')
+        )['min_year'] or today.year
+        max_year = today.year + 1
+        years = list(range(min_year, max_year + 1))
+
+        context['selected_year'] = selected_year
+        context['years'] = years
+
+        # Месяцы для выбранного года
+        months = []
+        for i in range(12):
+            month_date = datetime(selected_year, 1, 1) + relativedelta(months=i)
+            expenses = list(Expense.objects.filter(
+                user=self.request.user,
+                date__year=selected_year,
+                date__month=month_date.month
+            ))
+            total_debt = sum(e.debt for e in expenses)
+            status = 'future' if month_date > today else ('green' if total_debt <= 0 else 'red')
+
+            months.append({
+                'year': selected_year,
+                'month': month_date.month,
+                'name': month_date.strftime('%b'),
+                'status': status
+            })
+        context['months'] = months
+
+        # Сводка за выбранный год
+        year_expenses = list(Expense.objects.filter(
             user=self.request.user,
-            date__gte=start_date - relativedelta(months=1)  # +1 для предыдущего
-        ).order_by('date')
+            date__year=selected_year
+        ))
+        total_amount = sum(e.amount for e in year_expenses)
+        total_paid = sum(e.paid_amount for e in year_expenses)
+        total_debt = total_amount - total_paid
+        credit = Credit.objects.filter(user=self.request.user).aggregate(
+            Sum('amount')
+        )['amount__sum'] or 0
 
-        labels = []
-        cold_water = []
-        hot_water = []
-        electricity = []
-
-        last_values = {
-            'cold_water': None,
-            'hot_water': None,
-            'electricity': None
+        context['year_summary'] = {
+            'total_amount': total_amount,
+            'total_paid': total_paid,
+            'total_debt': total_debt,
+            'credit': credit
         }
-
-        # Строим 13 месяцев: от 12 месяцев назад до текущего включительно
-        for i in range(13):
-            month_date = start_date + relativedelta(months=i)
-            labels.append(month_date.strftime('%b %Y'))
-
-            month_end = month_date + relativedelta(months=1, days=-1)
-
-            for r_type, container in [
-                ('cold_water', cold_water),
-                ('hot_water', hot_water),
-                ('electricity', electricity)
-            ]:
-                current = readings.filter(
-                    type=r_type,
-                    date__gte=month_date,
-                    date__lte=month_end
-                ).order_by('-date').first()
-
-                if current:
-                    current_value = float(current.value)
-                    previous_value = last_values[r_type]
-                    last_values[r_type] = current_value
-                else:
-                    current_value = last_values[r_type]
-                    previous_value = last_values[r_type]
-
-                if previous_value is not None and current_value is not None:
-                    value = current_value - previous_value
-                else:
-                    value = None
-
-                container.append(value)
-
-        def to_float_list(lst):
-            return [float(x) if x is not None else None for x in lst]
-
-        context['chart_data'] = {
-            'labels': json.dumps(labels),
-            'cold_water': json.dumps(to_float_list(cold_water)),
-            'hot_water': json.dumps(to_float_list(hot_water)),
-            'electricity': json.dumps(to_float_list(electricity))
-        }
-
-        def stats(data):
-            values = [x for x in data if x is not None and x > 0]
-            if not values:
-                return {'min': 0, 'max': 0, 'avg': 0}
-            return {
-                'min': min(values),
-                'max': max(values),
-                'avg': sum(values) / len(values)
-            }
-
-        context['cold_stats'] = stats(cold_water)
-        context['hot_stats'] = stats(hot_water)
-        context['electricity_stats'] = stats(electricity)
-
-        return context
-
-        # Статистика (тоже через float)
-        def stats(data):
-            values = [x for x in data if x is not None]
-            if not values:
-                return {'min': 0, 'max': 0, 'avg': 0}
-            return {
-                'min': min(values),
-                'max': max(values),
-                'avg': sum(values) / len(values)
-            }
-
-        context['cold_stats'] = stats(cold_water)
-        context['hot_stats'] = stats(hot_water)
-        context['electricity_stats'] = stats(electricity)
 
         return context
 
@@ -405,6 +428,14 @@ class UpdateMeterReadingView(LoginRequiredMixin, UpdateView):
         context['is_edit'] = True
         return context
 
+    # Добавляем этот метод
+    def get_success_url(self):
+        year = self.request.POST.get('year') or self.request.GET.get('year')
+        url = reverse_lazy('expenses:dashboard')
+        if year:
+            url += f'?year={year}'
+        return url
+
 
 class DeleteMeterReadingView(LoginRequiredMixin, DeleteView):
     model = MeterReading
@@ -413,3 +444,11 @@ class DeleteMeterReadingView(LoginRequiredMixin, DeleteView):
 
     def get_queryset(self):
         return super().get_queryset().filter(user=self.request.user)
+
+    # Добавляем этот метод
+    def get_success_url(self):
+        year = self.request.POST.get('year') or self.request.GET.get('year')
+        url = reverse_lazy('expenses:dashboard')
+        if year:
+            url += f'?year={year}'
+        return url
